@@ -83,6 +83,7 @@ public class FriendshipService {
         if (friendship == null || friendship.getStatus() != FriendshipStatus.PENDING) {
             return false;
         }
+
         friendship.setStatus(FriendshipStatus.ACCEPTED);
         friendshipRepository.save(friendship);
         return true;

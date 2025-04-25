@@ -18,8 +18,7 @@ public class UserViewDTO implements Comparable<UserViewDTO>{
     private String roleName;
 
     private String timeStamp;
-
-    private List<String> friends;
+    private Double balance;
 
     @Override
     public int compareTo(UserViewDTO userViewDTO) {

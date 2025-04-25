@@ -15,6 +15,7 @@ public class UserViewBuilder {
                 .email(user.getEmail())
                 .timeStamp(user.getTimeStamp().format(DateTimeFormatter.ofPattern("MM-dd-yyy hh:mm:ss")))
                 .roleName(user.getRole().getName())
+                .balance(user.getBalance())
                 .build();
     }
 }

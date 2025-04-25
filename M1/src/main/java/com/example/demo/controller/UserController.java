@@ -1,6 +1,12 @@
 package com.example.demo.controller;
 
 
+
+import com.example.demo.dto.chatdto.MessageDto;
+import com.example.demo.dto.game.GameDTO;
+import com.example.demo.dto.moderatoractionDTO.ModeratorActionDTO;
+
+
 import com.example.demo.dto.userdto.UserDTO;
 import com.example.demo.entity.Friendship;
 import com.example.demo.entity.PostStatus;
@@ -21,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +54,10 @@ public class UserController {
     @RequestMapping(value = "/getUserByEmail/{email}", method = RequestMethod.GET)
     public ResponseEntity<?> displayUserViewByEmail(@PathVariable("email") String email) throws UserException {
         return new ResponseEntity<>(userService.findUserViewByEmail(email), HttpStatus.OK);
+    }
+    @RequestMapping(value = "/getUserByName/{name}", method = RequestMethod.GET)
+    public ResponseEntity<?> displayUserViewByName(@PathVariable("name") String name) throws UserException {
+        return new ResponseEntity<>(userService.findUserViewByName(name), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/getUserByRoleName/{roleName}", method = RequestMethod.GET)
@@ -75,16 +86,6 @@ public class UserController {
         return new ResponseEntity<>(userService.verifyUser(userDTO), HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/updatePostStatus")
-    public ResponseEntity<?> processUpdatePostForm(@RequestBody UserDTO userDTO) throws UserException {
-        return userService.updateStatus(userDTO);
-    }
-
-    @RequestMapping(method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/showPostStatus")
-    public ResponseEntity<?> processShowPostForm(@RequestBody(required = false) UserDTO userDTO) throws UserException {
-        return userService.showStatus(userDTO);
-    }
-
     @RequestMapping(method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/verifyRole")
     public ResponseEntity<?> processVerifyRoleForm(@RequestBody(required = false) UserDTO userDTO) throws UserException {
         return userService.showRole(userDTO);
@@ -94,4 +95,53 @@ public class UserController {
     public ResponseEntity<?> processUpdateRoleForm(@RequestBody(required = false) Map<String, String> request) throws UserException {
         return userService.updateRole(request);
     }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = "/adminDeleteAction", consumes  = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> processAdminForm(@RequestBody ModeratorActionDTO moderatorActionDTO) {
+        return userService.adminDeleteAction(moderatorActionDTO);
+    }
+    @RequestMapping(method = RequestMethod.PUT, value = "/adminBlockUser", consumes  = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> processAdminBlockForm(@RequestBody ModeratorActionDTO moderatorActionDTO) {
+        return userService.adminBlockAction(moderatorActionDTO);
+    }
+    @RequestMapping(method = RequestMethod.PUT, value = "/adminUnblockUser", consumes  = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> processAdminUnblockForm(@RequestBody ModeratorActionDTO moderatorActionDTO) {
+        return userService.adminUnblockAction(moderatorActionDTO);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/processAdmin")
+    public ResponseEntity<?> processProcessAdminForm(@RequestBody(required = false) UserDTO userDTO){
+        return userService.processRegisterAdmin(userDTO);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/createAdmin")
+    public ResponseEntity<?> processCreateAdminForm(@RequestBody(required = false) UserDTO userDTO){
+        return userService.registerAdmin(userDTO);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/chat")
+    public ResponseEntity<?> processChatForm(@RequestBody(required = false) MessageDto messageDto){
+        return userService.chat(messageDto);
+    }
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/blackjack/start")
+    public ResponseEntity<?> startBlackjack(@RequestBody(required = false) GameDTO gameDTO) {
+        return userService.startBlackjackGame(gameDTO);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = "/blackjack/{gameId}/hit")
+    public ResponseEntity<?> hitBlackjack(@PathVariable("gameId") Long gameId) {
+        return userService.hitBlackjack(gameId);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, value = "/blackjack/{gameId}/stand")
+    public ResponseEntity<?> standBlackjack(@PathVariable("gameId") Long gameId) {
+        return userService.standBlackjack(gameId);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/blackjack/{gameId}")
+    public ResponseEntity<?> getBlackjackStatus(@PathVariable("gameId") Long gameId) {
+        return userService.getBlackjackStatus(gameId);
+    }
+
+
 }

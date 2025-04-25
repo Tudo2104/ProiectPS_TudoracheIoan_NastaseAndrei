@@ -66,19 +66,12 @@ public class User {
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @Enumerated(EnumType.STRING)
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Column(
-            name = "status",
+            name = "money",
             nullable = false
     )
-    private PostStatus status;
+    private Double balance;
 
-
-    @PrePersist
-    protected void onCreate() {
-        this.status = PostStatus.FRIENDS;
-    }
 
 
 }

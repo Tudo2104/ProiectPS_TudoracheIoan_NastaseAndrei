@@ -27,6 +27,6 @@ public class UserDTO{
 
     private String roleName;
 
-    private PostStatus status;
+    private Double balance;
 
 }

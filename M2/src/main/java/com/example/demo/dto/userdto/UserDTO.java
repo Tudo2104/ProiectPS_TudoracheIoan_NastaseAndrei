@@ -22,4 +22,6 @@ public class UserDTO{
     private String password;
 
     private String roleName;
+
+    private Double balance;
 }

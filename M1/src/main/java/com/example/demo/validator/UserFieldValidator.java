@@ -29,9 +29,6 @@ public class UserFieldValidator {
                 errors.add("User password has invalid format");
             }
 
-            if (userDTO.getRoleName() == null) {
-                errors.add("User role name has invalid format");
-            }
 
         }
 
