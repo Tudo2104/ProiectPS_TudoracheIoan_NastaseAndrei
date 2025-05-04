@@ -6,6 +6,7 @@ import com.example.demo.builder.userbuilder.UserViewBuilder;
 import com.example.demo.dto.card.CardDTO;
 import com.example.demo.dto.chatdto.MessageDto;
 import com.example.demo.dto.game.GameDTO;
+import com.example.demo.dto.gameSummarySTO.GameSummaryDTO;
 import com.example.demo.dto.moderatorDTO.ModeratorDTO;
 import com.example.demo.dto.moderatoractionDTO.ModeratorActionDTO;
 import com.example.demo.dto.userdto.UserDTO;
@@ -42,6 +43,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -185,6 +187,7 @@ public class UserService   {
 
         User userSave = UserBuilder.generateEntityFromDTO(userDTO, role.get());
         userSave.setPassword(encoder.encode(userSave.getPassword()));
+        userSave.setBalance(0.0);
         userRepository.save(userSave);
         return verifyUser(userDTO);
     }
@@ -543,6 +546,8 @@ public class UserService   {
         if (!(principal instanceof UserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User must be authenticated!");
         }
+        String username = ((UserDetails) principal).getUsername();
+        User currentUser = userRepository.findUserByName(username);
         try {
             GameDTO response = webClientBuilder.build()
                     .method(HttpMethod.PUT)
@@ -553,6 +558,10 @@ public class UserService   {
 
             if (response == null) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No response from Blackjack service.");
+            }
+            if(response.getStatus().equals("PLAYER_LOST")){
+                currentUser.setBalance(currentUser.getBalance()-50);
+                userRepository.save(currentUser);
             }
 
             return ResponseEntity.ok(SimpleGameResponseBuilder.generateFromGameDTO(response));
@@ -566,6 +575,8 @@ public class UserService   {
         if (!(principal instanceof UserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User must be authenticated!");
         }
+        String username = ((UserDetails) principal).getUsername();
+        User currentUser = userRepository.findUserByName(username);
         try {
             GameDTO response = webClientBuilder.build()
                     .method(HttpMethod.PUT)
@@ -576,6 +587,14 @@ public class UserService   {
 
             if (response == null) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No response from Blackjack service.");
+            }
+            if(response.getStatus().equals("PLAYER_WON")){
+                currentUser.setBalance(currentUser.getBalance()+50);
+                userRepository.save(currentUser);
+            }
+            else if(response.getStatus().equals("PLAYER_LOST")){
+                currentUser.setBalance(currentUser.getBalance()-50);
+                userRepository.save(currentUser);
             }
 
             return ResponseEntity.ok(SimpleGameResponseBuilder.generateFromGameDTO(response));
@@ -610,6 +629,79 @@ public class UserService   {
         }
     }
 
+    public ResponseEntity<?> updateBalance(Float addMoney) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof UserDetails)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User must be authenticated!");
+        }
+        if(addMoney <=0 ){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Value must be higher than 0");
+        }
+        String username = ((UserDetails) principal).getUsername();
+        User currentUser = userRepository.findUserByName(username);
+        currentUser.setBalance(currentUser.getBalance()+addMoney);
+        userRepository.save(currentUser);
+        return  ResponseEntity.ok("Money has been deposited");
+
+    }
+
+    public ResponseEntity<?> getBalance() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof UserDetails)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User must be authenticated!");
+        }
+        String username = ((UserDetails) principal).getUsername();
+        User currentUser = userRepository.findUserByName(username);
+        return  ResponseEntity.ok(currentUser);
+
+    }
+
+    public ResponseEntity<?> getBlackjackHistoryByUserId() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof UserDetails)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User must be authenticated!");
+        }
+        String username = ((UserDetails) principal).getUsername();
+        User currentUser = userRepository.findUserByName(username);
+
+        try {
+            GameDTO[] responseArray = webClientBuilder.build()
+                    .method(HttpMethod.GET)
+                    .uri("http://localhost:8083/api/games/" + currentUser.getId()+"/history")
+                    .retrieve()
+                    .bodyToMono(GameDTO[].class)
+                    .block();
+
+            if (responseArray == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No response from Blackjack service.");
+            }
+
+            AtomicInteger counter = new AtomicInteger(1);
+
+            List<GameSummaryDTO> summaryList = Arrays.stream(responseArray)
+                    .filter(game -> !"IN_PROGRESS".equalsIgnoreCase(game.getStatus()))
+                    .map(game -> {
+                        Double betValue = switch (game.getStatus()) {
+                            case "PLAYER_WON" -> 50.0;
+                            case "PLAYER_LOST" -> -50.0;
+                            case "DRAW" -> 0.0;
+                            default -> null;
+                        };
+                        return GameSummaryDTO.builder()
+                                .id((long) counter.getAndIncrement())
+                                .betValue(betValue)
+                                .status(game.getStatus())
+                                .build();
+                    })
+                    .toList();
+
+
+            return ResponseEntity.ok(summaryList);
+        } catch (WebClientResponseException e) {
+            String errorBody = e.getResponseBodyAsString();
+            return ResponseEntity.status(e.getStatusCode()).body(errorBody);
+        }
+    }
 
 
 

@@ -143,5 +143,19 @@ public class UserController {
         return userService.getBlackjackStatus(gameId);
     }
 
+    @RequestMapping(method = RequestMethod.POST, value = "/addAmount/{amount}")
+    public ResponseEntity<?> addAmount(@PathVariable("amount") Float amount) {
+        return userService.updateBalance(amount);
+    }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/balance")
+    public ResponseEntity<?> GETAmount() {
+        return userService.getBalance();
+    }
+
+
+    @RequestMapping(method = RequestMethod.GET, value = "/history")
+    public ResponseEntity<?> getHistory() {
+        return userService.getBlackjackHistoryByUserId();
+    }
 }

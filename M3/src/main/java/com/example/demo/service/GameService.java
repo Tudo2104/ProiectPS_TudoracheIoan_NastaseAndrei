@@ -252,5 +252,18 @@ public class GameService {
         return 0.0;
     }
 
+    public ResponseEntity<?> getHistoryByUserId(Long userId) {
+        List<Game> games = gameRepository.findByUserId(userId);
+
+        if (games.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No game history found for user");
+        }
+
+        List<GameDTO> gameDTOs = games.stream()
+                .map(GameBuilder::generateDTOFromEntity)
+                .toList();
+
+        return ResponseEntity.ok(gameDTOs);
+    }
 
 }

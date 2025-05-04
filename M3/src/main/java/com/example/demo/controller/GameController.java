@@ -34,4 +34,8 @@ public class GameController {
     public ResponseEntity<?> getGameStatus(@PathVariable("gameId") Long gameId) {
         return gameService.getGameStatus(gameId);
     }
+    @RequestMapping(method = RequestMethod.GET, value = "/{userId}/history")
+    public ResponseEntity<?> getHistory(@PathVariable("userId") Long userId) {
+        return gameService.getHistoryByUserId(userId);
+    }
 }
