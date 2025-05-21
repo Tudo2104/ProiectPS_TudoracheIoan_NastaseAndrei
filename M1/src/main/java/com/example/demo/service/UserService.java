@@ -498,19 +498,43 @@ public class UserService   {
         if (!(principal instanceof UserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User must be authenticated!");
         }
-
+        GameDTO lastGame = new GameDTO();
         String username = ((UserDetails) principal).getUsername();
         User currentUser = userRepository.findUserByName(username);
         messageDto.setSender(currentUser.getName());
         try {
+            GameDTO[] responseArray = webClientBuilder.build()
+                    .method(HttpMethod.GET)
+                    .uri("http://localhost:8083/api/games/" + currentUser.getId()+"/history")
+                    .retrieve()
+                    .bodyToMono(GameDTO[].class)
+                    .block();
+
+            if (responseArray != null && responseArray.length != 0) {
+                lastGame = responseArray[responseArray.length - 1];
+            }
+
+
+        } catch (WebClientResponseException e) {
+            String errorBody = e.getResponseBodyAsString();
+            return ResponseEntity.status(e.getStatusCode()).body(errorBody);
+        }
+
+        Long gameId = null;
+        if ("IN_PROGRESS".equals(lastGame.getStatus())) {
+            gameId = lastGame.getId();
+            System.out.println(gameId);
+        }
+
+        try {
             webClientBuilder.build()
                     .method(HttpMethod.POST)
-                    .uri("http://localhost:8082/api/message/chat")
+                    .uri("http://localhost:8082/api/message/chat/"+ gameId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(messageDto)
                     .retrieve()
                     .bodyToMono(Void.class)
-                    .subscribe();
+                    .block();
 
 
         }catch (WebClientResponseException e) {
@@ -559,7 +583,7 @@ public class UserService   {
         try {
             GameDTO response = webClientBuilder.build()
                     .method(HttpMethod.PUT)
-                    .uri("http://localhost:8083/api/games/" + gameId + "/hit")
+                    .uri("http://localhost:8083/api/games/" + gameId +"/"+username+ "/hit")
                     .retrieve()
                     .bodyToMono(GameDTO.class)
                     .block();
@@ -588,7 +612,7 @@ public class UserService   {
         try {
             GameDTO response = webClientBuilder.build()
                     .method(HttpMethod.PUT)
-                    .uri("http://localhost:8083/api/games/" + gameId + "/stand")
+                    .uri("http://localhost:8083/api/games/" + gameId +"/"+username+  "/stand")
                     .retrieve()
                     .bodyToMono(GameDTO.class)
                     .block();

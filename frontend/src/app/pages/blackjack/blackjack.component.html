@@ -1,0 +1,36 @@
+<div class="blackjack-container">
+
+  <div class="cards-display">
+    <div class="hand player-hand">
+      <h3>Player's Hand</h3>
+      <div class="cards">
+        <img *ngFor="let card of playerCards" [src]="'cards/' + card + '.png'" class="card-img" />
+      </div>
+    </div>
+
+    <div class="hand dealer-hand">
+      <h3>Dealer's Hand</h3>
+      <div class="cards">
+        <img *ngFor="let card of dealerCards" [src]="'cards/' + card + '.png'" class="card-img" />
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+
+<div class="buttons" *ngIf="!showResult">
+  <button (click)="startGame()" [disabled]="!gameOver && gameStatus">Start Game</button>
+  <button (click)="hit()" [disabled]="gameOver || !gameId">Hit</button>
+  <button (click)="stand()" [disabled]="gameOver || !gameId">Stand</button>
+
+</div>
+<div class="buttons" *ngIf="showResult">
+
+  <button  (click)="nextGame()">Next Game</button>
+</div>
+
+<div class="status">
+  <h3>Status: {{ gameStatus || 'No game started' }}</h3>
+</div>

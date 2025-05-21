@@ -19,9 +19,9 @@ public class MessageController {
     private final MessageService messageService;
     private final ChatWebSocketHandler chatWebSocketHandler;
 
-    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/chat")
-    public ResponseEntity<?> processChatForm(@RequestBody(required = false) MessageDto messageDto){
-        return chatWebSocketHandler.broadcast(messageDto);
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/chat/"+"{gameId}")
+    public ResponseEntity<?> processChatForm(@RequestBody(required = false) MessageDto messageDto,@PathVariable("gameId") Long gameId){
+        return chatWebSocketHandler.broadcast(messageDto,gameId);
     }
 
 }

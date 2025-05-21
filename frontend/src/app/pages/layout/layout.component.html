@@ -1,0 +1,65 @@
+<div class="parent">
+  <div class="wrapper">
+    <nav class="custom-navbar">
+      <ul class="navbar-items">
+        <li><a>Acasă</a></li>
+        <li><a (click)="showDepositPopup = true">Deposit</a></li>
+        <li><a (click)="getHistory()">History</a></li>
+
+        <li>
+          <a class="logout-link" (click)="logout()">Logout</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Deposit Popup -->
+<div class="popup-overlay" *ngIf="showDepositPopup"></div>
+
+<div class="popup-model" *ngIf="showDepositPopup">
+  <form name="form-deposit" id="form-deposit" (submit)="submitDeposit()">
+    <button class="close-btn" type="button" (click)="showDepositPopup = false">&times;</button>
+    <h2>- Deposit -</h2>
+    <div>
+      <span class="your-balance">Your Balance:</span>
+      <span class="w-balance">
+        <span class="fab fa-btc"></span>
+        <span id="user-balance">{{ balance | number:'1.2-2' }}</span>
+      </span>
+    </div>
+
+    <div class="amount">
+      <label>Amount</label>
+      <input type="text" class="inp" [(ngModel)]="depositAmount" name="depositAmount" placeholder="0.00000000">
+      <div *ngIf="depositMessage" class="deposit-message">
+        {{ depositMessage }}
+      </div>
+    </div>
+
+    <button class="btn pulse" type="submit">
+      <i class="fas fa-coins" style="margin-right: 6px;"></i>Deposit
+    </button>
+  </form>
+</div>
+
+<div class="popup-model-history" *ngIf="showHistoryPopup">
+  <button class="close-btn" type="button" (click)="showHistoryPopup = false">&times;</button>
+  <h2>- Game History -</h2>
+  <div *ngIf="historyList.length === 0" class="no-history">No history found.</div>
+  <div class="history-table">
+    <div class="history-row header">
+      <div class="col-id">ID</div>
+      <div class="col-bet">Bet</div>
+      <div class="col-status">Status</div>
+    </div>
+    <div class="history-row" *ngFor="let game of historyList">
+      <div class="col-id">{{ game.id }}</div>
+      <div class="col-bet">{{ game.betValue }}</div>
+      <div class="col-status">{{ game.status }}</div>
+    </div>
+  </div>
+</div>
+
+
+<router-outlet></router-outlet>

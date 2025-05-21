@@ -20,14 +20,14 @@ public class GameController {
         return gameService.startGame(gameDTO);
     }
 
-    @RequestMapping(method = RequestMethod.PUT, value = "/{gameId}/hit")
-    public ResponseEntity<?> hit(@PathVariable("gameId") Long gameId) {
-        return gameService.hit(gameId);
+    @RequestMapping(method = RequestMethod.PUT, value = "/{gameId}/{name}/hit")
+    public ResponseEntity<?> hit(@PathVariable("gameId") Long gameId, @PathVariable("name") String name) {
+        return gameService.hit(gameId,name);
     }
 
-    @RequestMapping(method = RequestMethod.PUT, value = "/{gameId}/stand")
-    public ResponseEntity<?> stand(@PathVariable("gameId") Long gameId) {
-        return gameService.stand(gameId);
+    @RequestMapping(method = RequestMethod.PUT, value = "/{gameId}/{name}/stand")
+    public ResponseEntity<?> stand(@PathVariable("gameId") Long gameId, @PathVariable("name") String name) {
+        return gameService.stand(gameId,name);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/{gameId}")

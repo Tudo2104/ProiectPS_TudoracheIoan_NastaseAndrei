@@ -4,6 +4,7 @@ import com.example.demo.builder.CardBuilder;
 import com.example.demo.builder.DealerBuilder;
 import com.example.demo.builder.GameBuilder;
 import com.example.demo.builder.HandBuilder;
+import com.example.demo.dto.chatdto.MessageDto;
 import com.example.demo.dto.game.GameDTO;
 import com.example.demo.entity.Card;
 import com.example.demo.entity.Dealer;
@@ -13,9 +14,14 @@ import com.example.demo.repository.CardRepository;
 import com.example.demo.repository.GameRepository;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.misc.LogManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +34,8 @@ public class GameService {
 
     private final GameRepository gameRepository;
     private final CardRepository cardRepository;
+    @Autowired
+    private WebClient.Builder webClientBuilder;
     private final List<String> suits = Arrays.asList("hearts", "diamonds", "clubs", "spades");
     private final List<String> ranks = Arrays.asList(
             "2", "3", "4", "5", "6", "7",
@@ -55,7 +63,7 @@ public class GameService {
         return ResponseEntity.ok(savedDTO);
     }
 
-    public ResponseEntity<?> hit(Long gameId) {
+    public ResponseEntity<?> hit(Long gameId,String name) {
         Optional<Game> optionalGame = gameRepository.findById(gameId);
         if (optionalGame.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Game not found");
@@ -80,6 +88,27 @@ public class GameService {
         if (game.getPlayerHand().getIsBust().equals(Boolean.TRUE)) {
             game.setStatus("PLAYER_LOST");
         }
+        MessageDto messageDto = new MessageDto();
+        messageDto.setContent("Hit"+"\n" +"Value Cards: "+ game.getPlayerHand().getTotalValue());
+
+
+        messageDto.setSender(name);
+
+        try {
+            webClientBuilder.build()
+                    .method(HttpMethod.POST)
+                    .uri("http://localhost:8082/api/message/chat/"+gameId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(messageDto)
+                    .retrieve()
+                    .bodyToMono(Void.class)
+                    .subscribe();
+
+
+        }catch (WebClientResponseException e) {
+            String errorBody = e.getResponseBodyAsString();
+            return ResponseEntity.status(e.getStatusCode()).body(errorBody);
+        }
 
         Game savedGame = gameRepository.save(game);
         GameDTO savedDTO = GameBuilder.generateDTOFromEntity(savedGame);
@@ -88,7 +117,7 @@ public class GameService {
 
 
 
-    public ResponseEntity<?> stand(Long gameId) {
+    public ResponseEntity<?> stand(Long gameId,String name) {
         Optional<Game> optionalGame = gameRepository.findById(gameId);
         if (optionalGame.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Game not found");
@@ -113,8 +142,25 @@ public class GameService {
 
         determineWinner(game);
 
-        adjustBalanceAfterGame(game);
+        MessageDto messageDto = new MessageDto();
+        messageDto.setContent("Stand\n"+"Status: "+game.getStatus());
+        messageDto.setSender(name);
 
+        try {
+            webClientBuilder.build()
+                    .method(HttpMethod.POST)
+                    .uri("http://localhost:8082/api/message/chat/"+gameId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(messageDto)
+                    .retrieve()
+                    .bodyToMono(Void.class)
+                    .subscribe();
+
+
+        }catch (WebClientResponseException e) {
+            String errorBody = e.getResponseBodyAsString();
+            return ResponseEntity.status(e.getStatusCode()).body(errorBody);
+        }
         Game updatedGame = gameRepository.save(game);
         GameDTO updatedDTO = GameBuilder.generateDTOFromEntity(updatedGame);
         return ResponseEntity.ok(updatedDTO);
@@ -161,22 +207,19 @@ public class GameService {
     }
 
     private int calculateCardValue(String rank) {
-        switch (rank) {
-            case "2": return 2;
-            case "3": return 3;
-            case "4": return 4;
-            case "5": return 5;
-            case "6": return 6;
-            case "7": return 7;
-            case "8": return 8;
-            case "9": return 9;
-            case "10":
-            case "jack":
-            case "queen":
-            case "king": return 10;
-            case "ace": return 11;
-            default: throw new IllegalArgumentException("Invalid card rank: " + rank);
-        }
+        return switch (rank) {
+            case "2" -> 2;
+            case "3" -> 3;
+            case "4" -> 4;
+            case "5" -> 5;
+            case "6" -> 6;
+            case "7" -> 7;
+            case "8" -> 8;
+            case "9" -> 9;
+            case "10", "jack", "queen", "king" -> 10;
+            case "ace" -> 11;
+            default -> throw new IllegalArgumentException("Invalid card rank: " + rank);
+        };
     }
 
     private void updateHandStatus(Hand hand) {
@@ -230,27 +273,7 @@ public class GameService {
         }
     }
 
-    private Double adjustBalanceAfterGame(Game game) {
-        if (game.getBetValue() == null) {
-            return 0.0;
-        }
 
-        Double betValue = game.getBetValue();
-
-        if ("PLAYER_WON".equals(game.getStatus())) {
-            return betValue * 2;
-        }
-
-        if ("PLAYER_LOST".equals(game.getStatus())) {
-            return -betValue;
-        }
-
-        if ("DRAW".equals(game.getStatus())) {
-            return 0.0;
-        }
-
-        return 0.0;
-    }
 
     public ResponseEntity<?> getHistoryByUserId(Long userId) {
         List<Game> games = gameRepository.findByUserId(userId);

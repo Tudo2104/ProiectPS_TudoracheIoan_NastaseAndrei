@@ -1,0 +1,79 @@
+<div class="parent">
+  <div class="wrapper">
+    <form>
+      <h1>Register</h1>
+
+      <div class="input-box">
+        <input
+          type="text"
+          name="Username"
+          [(ngModel)]="registerForm.name"
+          placeholder="Username"
+          required
+        />
+        <i class='bx bxs-user'></i>
+      </div>
+
+      <div class="input-box">
+        <input
+          type="email"
+          name="Email"
+          [(ngModel)]="registerForm.email"
+          placeholder="Email"
+          required
+        />
+        <i class='bx bxs-envelope'></i>
+      </div>
+
+      <div class="input-box">
+        <input
+          type="password"
+          name="Password"
+          [(ngModel)]="registerForm.password"
+          placeholder="Password"
+          required
+        />
+        <i class='bx bxs-lock-alt'></i>
+      </div>
+
+      <!-- POPUP Error -->
+      <div class="popup-overlay" *ngIf="errorMessage"></div>
+      <div class="popup center" [class.active]="errorMessage">
+        <div class="icon">
+          <i class="fa fa-check"></i>
+        </div>
+        <div class="title">
+            Register Failed!
+        </div>
+        <div class="description">
+          {{ errorMessage }}
+        </div>
+        <div class="dismiss-btn">
+          <button (click)="closeErrorPopup()">OK</button>
+        </div>
+      </div>
+      <!-- POPUP Success -->
+      <div class="popup-overlay" *ngIf="successMessage"></div>
+      <div class="popup center" [class.active]="successMessage">
+        <div class="iconSuccess">
+          <i class="fa fa-check"></i>
+        </div>
+        <div class="title">
+          Registered successfully!
+        </div>
+        <div class="description">
+          Click on "OK" to hop on!
+        </div>
+        <div class="dismiss-btn">
+          <button (click)="successPopup()">OK</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn" (click)="Register()">Register</button>
+
+      <div class="register-link">
+        <p>Already have an account? <a routerLink="/login">Login</a></p>
+      </div>
+    </form>
+  </div>
+</div>
