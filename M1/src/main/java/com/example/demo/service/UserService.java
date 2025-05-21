@@ -251,6 +251,14 @@ public class UserService   {
 
     }
 
+    public ResponseEntity<String> verifyLogin(){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof UserDetails)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Bad Token");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body("Good Token");
+    }
+
     public ResponseEntity<?> showRole(UserDTO userDTO) {
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

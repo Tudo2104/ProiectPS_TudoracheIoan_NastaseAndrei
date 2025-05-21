@@ -20,6 +20,7 @@ import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -84,6 +85,10 @@ public class UserController {
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/login")
     public ResponseEntity<?> processLoginUserForm(@RequestBody(required = false) UserDTO userDTO) throws UserException {
         return new ResponseEntity<>(userService.verifyUser(userDTO), HttpStatus.OK);
+    }
+    @RequestMapping(method = RequestMethod.POST,  produces = MediaType.TEXT_PLAIN_VALUE  , value = "/verifyLogin")
+    public ResponseEntity<String> processVerifyLoginUserForm(){
+        return userService.verifyLogin();
     }
 
     @RequestMapping(method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE, value = "/verifyRole")
